@@ -35,3 +35,12 @@ Watch for a change in a property across all instances of a constructor:
     var a = WP.createOn(new A());
     WP.watchOnConstructor(A, 'x', function() { console.log('x changed!'); });
     WP.setOn(a, 'x', 'Cool new thing!'); // x changed!
+
+### Testing
+This project is tested with Mocha running on NodeJS.
+To get the tests running:
+
+1. Install Node and npm
+2. `npm install -g mocha` to install Mocha
+3. From the repository root, `npm install requirejs` to install RequireJs in Node 
+4. `cd test` and run `mocha`
