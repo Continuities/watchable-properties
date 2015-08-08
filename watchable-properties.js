@@ -60,7 +60,7 @@ define(function() {
             var watchers = objectWatchers[propertyName] = 
                     objectWatchers[propertyName] || [];
 
-            watcher.push(watcherFunction);
+            watchers.push(watcherFunction);
         }
 
         function __removeObjectWatcher(propertyName, watcherFunction) {
@@ -70,7 +70,7 @@ define(function() {
                     watchers.indexOf(watcherFunction) : null;
 
             if (!watcherFunction) {
-                delete watchers.propertyName;
+                delete objectWatchers[propertyName];
                 return;
             }
 
@@ -99,6 +99,15 @@ define(function() {
         targetObject.__watchProps.watch(propertyName, watcherFunction);
     }
 
+    function _unwatchOnObject(targetObject, propertyName, watcherFunction) {
+        if (!targetObject.__watchProps) {
+            throw 'Cannot unwatch ' + propertyName + 
+                  ' on unwatchable object: ' + targetObject;
+        }
+
+        targetObject.__watchProps.unwatch(propertyName, watcherFunction);
+    }
+
     function _getProperty(targetObject, propertyName) {
         if (!targetObject.__watchProps) {
             throw 'Cannot get ' + propertyName + 
@@ -120,8 +129,11 @@ define(function() {
     return {
         createOn: _createWatchableProperties
         , watchOn: _watchOnObject
+        , unwatchOn: _unwatchOnObject
         , getFrom: _getProperty
         , setOn: _setProperty
+
+        // TODO: Implement watchOnPrototype
     };
 
 });
