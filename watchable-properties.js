@@ -1,15 +1,26 @@
 /**
- *    Watchable Properties
- *    Michael Townsend, 2015
- * 
- *    Creates encapsulated, watchable properties on an object.
- *    This is where I should document how to use it.    
+ *  Watchable Properties
+ *  Michael Townsend, 2015
+ *  Creates encapsulated, watchable properties on an object.
+ *    
+ *  Usage:
+ *  Call createOn() to create watchable properties on an object.
+ *  Watchable properties can be set and retrieved with setOn() and getFrom().
+ *  
+ *  Set watchers on an object's property with watchOn(). Any changes to the
+ *  specified property on the specified object will notify the watcher.
+ *  
+ *  Set watchers on a constructor with watchOnConstructor(). Any changes to
+ *  watchable objects created from that constructor will notify the watcher.
  *
- *    This Source Code Form is subject to the terms of the Mozilla Public
- *    License, v. 2.0. If a copy of the MPL was not distributed with this
- *    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  **/
 define(function() {
+
+    'use strict';
 
     function _createWatchableProperties(targetObject) {
         var watchableProperties = {}
