@@ -14,7 +14,7 @@ define(function() {
     function _createWatchableProperties(targetObject) {
         var watchableProperties = {}
         ,   objectWatchers = {}
-        ,   prototypeWatchers = {}
+        ,   constructorWatchers = {}
         ;
 
         if (targetObject.__watchProps) {
@@ -36,41 +36,43 @@ define(function() {
                 })
             });
 
-            if (targetObject.__proto__.__watchProps) {
-                targetObject.__proto__.__watchProps.callPrototypeWatchers({
-                    propertyName: propertyName
-                    , changedFrom: watchableProperties[propertyName]
-                    , changedTo: value
-                    , target: targetObject
-                });
+            if (targetObject.constructor.__watchProps) {
+                targetObject.constructor.__watchProps.callConstructorWatchers(
+                    propertyName,
+                    {
+                        changedFrom: watchableProperties[propertyName]
+                        , changedTo: value
+                        , target: targetObject
+                    }
+                );
             }
 
             watchableProperties[propertyName] = value;
         }
 
-        function __callPrototypeWatchers(opts) {
-            var watchers = prototypeWatchers[propertyName];
+        function __callConstructorWatchers(propertyName, opts) {
+            var watchers = constructorWatchers[propertyName];
 
             watchers && watchers.forEach(function(watcher) {
                 watcher.call(targetObject, opts);
             });
         }
 
-        function __addObjectWatcher(propertyName, watcherFunction) {
-            var watchers = objectWatchers[propertyName] = 
-                    objectWatchers[propertyName] || [];
+        function __addWatcher(watcherList, propertyName, watcherFunction) {
+            var watchers = watcherList[propertyName] = 
+                    watcherList[propertyName] || [];
 
             watchers.push(watcherFunction);
         }
 
-        function __removeObjectWatcher(propertyName, watcherFunction) {
-            var watchers = objectWatchers[propertyName] = 
-                    objectWatchers[propertyName] || []
+        function __removeWatcher(watcherList, propertyName, watcherFunction) {
+            var watchers = watcherList[propertyName] = 
+                    watcherList[propertyName] || []
             ,   watcherIndex = watcherFunction ? 
                     watchers.indexOf(watcherFunction) : null;
 
             if (!watcherFunction) {
-                delete objectWatchers[propertyName];
+                delete watcherList[propertyName];
                 return;
             }
 
@@ -84,56 +86,61 @@ define(function() {
         targetObject.__watchProps = {
             get: __get
             , set: __set
-            , watch: __addObjectWatcher
-            , unwatch: __removeObjectWatcher
-            , callPrototypeWatchers: __callPrototypeWatchers
+            , watch: __addWatcher.bind(targetObject, objectWatchers)
+            , unwatch: __removeWatcher.bind(targetObject, objectWatchers)
+            , watchConstructor: __addWatcher.bind(targetObject, constructorWatchers)
+            , unwatchContructor: __removeWatcher.bind(targetObject, constructorWatchers)
+            , callConstructorWatchers: __callConstructorWatchers
         };
+
+        return targetObject;
     }
 
     function _watchOnObject(targetObject, propertyName, watcherFunction) {
-        if (!targetObject.__watchProps) {
-            throw 'Cannot watch ' + propertyName + 
-                  ' on unwatchable object: ' + targetObject;
-        }
-
+        _verifyWatchable(targetObject, 'watch ' + propertyName);
         targetObject.__watchProps.watch(propertyName, watcherFunction);
     }
 
     function _unwatchOnObject(targetObject, propertyName, watcherFunction) {
-        if (!targetObject.__watchProps) {
-            throw 'Cannot unwatch ' + propertyName + 
-                  ' on unwatchable object: ' + targetObject;
-        }
-
+        _verifyWatchable(targetObject, 'unwatch ' + propertyName);
         targetObject.__watchProps.unwatch(propertyName, watcherFunction);
     }
 
-    function _getProperty(targetObject, propertyName) {
-        if (!targetObject.__watchProps) {
-            throw 'Cannot get ' + propertyName + 
-                  ' from unwatchable object: ' + targetObject;
-        }
+    function _watchOnConstructor(targetObject, propertyName, watcherFunction) {
+        _verifyWatchable(targetObject, 'watch ' + propertyName);
+        targetObject.__watchProps.watchConstructor(propertyName, watcherFunction);
+    }
 
+    function _unwatchOnConstructor(targetObject, propertyName, watcherFunction) {
+        _verifyWatchable(targetObject, 'unwatch ' + propertyName);
+        targetObject.__watchProps.unwatchContructor(propertyName, watcherFunction);
+    }
+
+    function _getProperty(targetObject, propertyName) {
+        _verifyWatchable(targetObject, 'get ' + propertyName);
         return targetObject.__watchProps.get(propertyName);
     }
 
     function _setProperty(targetObject, propertyName, value) {
+        _verifyWatchable(targetObject, 'set ' + propertyName);
+        return targetObject.__watchProps.set(propertyName, value);
+    }
+
+    function _verifyWatchable(targetObject, attemptedOperation) {
         if (!targetObject.__watchProps) {
-            throw 'Cannot set ' + propertyName + 
+            throw 'Cannot ' + (attemptedOperation || 'do watchable things') +
                   ' on unwatchable object: ' + targetObject;
         }
-
-        return targetObject.__watchProps.set(propertyName, value);
     }
 
     return {
         createOn: _createWatchableProperties
         , watchOn: _watchOnObject
         , unwatchOn: _unwatchOnObject
+        , watchOnConstructor: _watchOnConstructor
+        , unwatchOnConstructor: _unwatchOnConstructor
         , getFrom: _getProperty
         , setOn: _setProperty
-
-        // TODO: Implement watchOnPrototype
     };
 
 });
