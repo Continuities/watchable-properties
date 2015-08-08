@@ -118,10 +118,10 @@ define(function() {
     }
 
     return {
-        create: _createWatchableProperties
-        , watch: _watchOnObject
-        , get: _getProperty
-        , set: _setProperty
+        createOn: _createWatchableProperties
+        , watchOn: _watchOnObject
+        , getFrom: _getProperty
+        , setOn: _setProperty
     };
 
 });
